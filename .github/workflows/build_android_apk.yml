@@ -51,6 +51,18 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Generate release keystore
+        working-directory: ${{ env.APK_BUILD_DIR }}
+        run: |
+          mkdir -p secrets
+          keytool -genkey -v -keystore secrets/android-keystore.jks -alias localsend -keyalg RSA -keysize 2048 -validity 10000 -storepass localsend123 -keypass localsend123 -dname "CN=LocalSend, OU=App, O=LocalSend, L=City, S=State, C=US"
+          cat <<EOF > app/android/key.properties
+          storePassword=localsend123
+          keyPassword=localsend123
+          keyAlias=localsend
+          storeFile=${{ env.APK_BUILD_DIR }}/secrets/android-keystore.jks
+          EOF
+
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
