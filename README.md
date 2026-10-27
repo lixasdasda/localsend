@@ -1,5 +1,26 @@
 # LocalSend
 
+> [!NOTE]
+> **Fork Modifications / HyperOS 3 File Picker Mitigation**
+> 
+> This fork includes the defensive fix from [PR #3365](https://github.com/localsend/localsend/pull/3365) to resolve the file picker failure and misleading "No permission" error on **Xiaomi HyperOS 3 (Android 16)** and other OEM custom ROMs ([Official Issue #3065](https://github.com/localsend/localsend/issues/3065)).
+> 
+> ### Key Technical Changes
+> 1. **Dynamic SAF Cursor Indexing (`FastDocumentFile.kt`)**:
+>    - Replaced hardcoded column indices (`cursor.getString(0)`, `cursor.getLong(2)`) with `cursor.getColumnIndex(...)`.
+>    - Added safe defaults (`""` for strings, `0L` for size) when custom ROM `DocumentsProvider` omits standard columns.
+> 2. **Fallback File Metadata & Safe Permissions (`MainActivity.kt`)**:
+>    - Added `takePersistableUriPermissionSafe` to gracefully handle `SecurityException` / `IllegalArgumentException`.
+>    - Added `buildFallbackFileInfo` using `OpenableColumns.DISPLAY_NAME` and `openAssetFileDescriptor` as a fallback when standard document querying fails.
+>    - Updated `folderExists` to use dynamic column indices.
+> 3. **Accurate Error Reporting (`file_picker.dart`)**:
+>    - Differentiates user cancellation, genuine permission denial, and platform exceptions, replacing the misleading generic `NoPermissionDialog`.
+> 4. **CI/CD Standalone Release Build (`build_android_apk.yml`)**:
+>    - Configured automatic self-signed keystore generation to allow building release APKs without official repository secrets.
+>    - Automated GitHub Release publication with ready-to-install split-per-abi APKs.
+> 
+> 📦 **Downloads**: Pre-built APKs are available in [Releases](https://github.com/lixasdasda/localsend/releases/tag/v1.18.2-hyperos3-fix). (For Xiaomi/Redmi devices, download `app-arm64-v8a-release.apk`).
+
 [![CI status][ci-badge]][ci-workflow]
 [![Translations][translate-badge]][translate-link]
 [![Packaging status][packaging-badge]][packaging-link]

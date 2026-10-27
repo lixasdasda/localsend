@@ -1,5 +1,26 @@
 # LocalSend
 
+> [!NOTE]
+> **本 Fork 分支修改说明（解决 Xiaomi HyperOS 3 文件选择器异常）**
+> 
+> 本分支合入了社区 [PR #3365](https://github.com/localsend/localsend/pull/3365) 的防御性修复方案，解决了在 **Xiaomi HyperOS 3 (Android 16)** 及部分厂商定制系统上选择文件时直接提示“无权限（No permission）”导致无法发送文件的问题（官方跟踪议题：[Issue #3065](https://github.com/localsend/localsend/issues/3065)）。
+> 
+> ### 核心技术修改详情
+> 1. **SAF 游标动态索引解析 (`FastDocumentFile.kt`)**：
+>    - 将原版硬编码的列索引（如 `cursor.getString(0)`、`cursor.getLong(2)` 等）全部替换为 `cursor.getColumnIndex(...)` 动态解析。
+>    - 当厂商定制的 `DocumentsProvider` 返回非标准游标或缺少某些列时，提供安全回退默认值（空字符串或 0L），彻底杜绝原生层崩溃。
+> 2. **持久化权限安全回退与备用元数据获取 (`MainActivity.kt`)**：
+>    - 封装 `takePersistableUriPermissionSafe` 方法，捕获厂商定制系统抛出的 `SecurityException` 与 `IllegalArgumentException`，确保当前会话的 URI 可正常访问。
+>    - 新增 `buildFallbackFileInfo`：在标准 SAF 查询失败时，通过 `OpenableColumns.DISPLAY_NAME` 和 `openAssetFileDescriptor` 降级读取文件名和文件大小。
+>    - 改造 `folderExists` 方法，统一采用动态列名索引。
+> 3. **精准的错误捕获与弹窗交互 (`file_picker.dart`)**：
+>    - 细分用户主动取消（CANCELED）、真正的权限拒绝（PERMISSION_DENIED）以及平台异常，避免误导性地无脑弹出 `NoPermissionDialog`。
+> 4. **GitHub Actions 独立构建与 Release 适配 (`build_android_apk.yml`)**：
+>    - 在云端自动生成自签名密钥，去除对官方私有 Secret 证书的依赖，使个人 Fork 仓库能够顺利构建 Release APK。
+>    - 增加自动发布 GitHub Release 流程，方便直接下载与安装 APK。
+> 
+> 📦 **APK 安装包下载**：可在 [Releases 页面](https://github.com/lixasdasda/localsend/releases/tag/v1.18.2-hyperos3-fix) 直接下载编译好的安装包（主流小米/红米手机请下载 `app-arm64-v8a-release.apk`）。
+
 [![CI 状态][ci-badge]][ci-workflow]
 [![Translations][translate-badge]][translate-link]
 [![Packaging status][packaging-badge]][packaging-link]
